@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dotnet-backend
+  namespace: taskapp
+  labels:
+    app: dotnet-backend
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: dotnet-backend
+  template:
+    metadata:
+      labels:
+        app: dotnet-backend
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1654            # .NET image-oda built-in `app` user
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: dotnet
+          image: taskapp/dotnet-backend:1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+            - name: ConnectionStrings__Default
+              value: Host=postgres;Port=5432;Database=dotnetdb;Username=tasks;Password=$(POSTGRES_PASSWORD)
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          # Pod terminate aagumbodhu endpoints removal kube-proxy/ingress-ku reach aaga
+          # konjam time aagum. Adhukkulla SIGTERM vandha in-flight requests 502 aagum —
+          # 5s wait panni apram shutdown start.
+          lifecycle:
+            preStop:
+              sleep:
+                seconds: 5
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            periodSeconds: 2
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/ready
+              port: http
+            periodSeconds: 5
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}

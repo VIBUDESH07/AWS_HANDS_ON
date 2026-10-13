@@ -1,0 +1,15 @@
+# Non-secret config. Maathina pod restart pannanum (env vars start-la mattum read aagum):
+#   kubectl -n taskapp rollout restart deployment/django-backend
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: django-config
+  namespace: taskapp
+data:
+  DB_HOST: postgres
+  DB_PORT: "5432"
+  DB_NAME: tasks
+  DB_USER: tasks
+  DEBUG: "0"
+  ALLOWED_HOSTS: "*"
+  LOG_LEVEL: INFO

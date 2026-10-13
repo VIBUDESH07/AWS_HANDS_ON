@@ -1,0 +1,31 @@
+# Ingress = cluster-ku veliya irundhu HTTP traffic-a host/path vechu correct Service-ku route pannum.
+# Ingress controller venum: `minikube addons enable ingress`
+# /etc/hosts-la add pannunga:  <minikube ip>  django.taskapp.local dotnet.taskapp.local
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: taskapp
+  namespace: taskapp
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: django.taskapp.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend-django
+                port:
+                  name: http
+    - host: dotnet.taskapp.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend-dotnet
+                port:
+                  name: http

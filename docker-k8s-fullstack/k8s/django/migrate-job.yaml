@@ -1,0 +1,40 @@
+# Job = oru thadava run aagi complete aagura work. Deployment-la migrate pannina
+# 2 replicas-um orey nerathula migrate panna try pannum — race condition.
+# Job spec immutable: image maathina `kubectl delete job django-migrate` panni re-apply.
+# ttlSecondsAfterFinished — mudinja 10 min-la Job auto delete; next apply-la thirumba run aagum
+# (migrations idempotent, adhanala safe).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: django-migrate
+  namespace: taskapp
+spec:
+  backoffLimit: 4
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata:
+      labels:
+        app: django-migrate
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+        # Postgres ready aagura varaikum wait — illana Job fail-retry loop-la sutthum
+        - name: wait-for-postgres
+          image: postgres:17-alpine
+          command: ["sh", "-c", "until pg_isready -h postgres -p 5432; do echo waiting for postgres; sleep 2; done"]
+      containers:
+        - name: migrate
+          image: taskapp/django-backend:1.0
+          imagePullPolicy: IfNotPresent
+          command: ["python", "manage.py", "migrate", "--noinput"]
+          envFrom:
+            - configMapRef:
+                name: django-config
+            - secretRef:
+                name: django-secret
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD

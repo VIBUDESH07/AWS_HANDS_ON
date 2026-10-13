@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-backend
+  namespace: taskapp
+  labels:
+    app: django-backend
+spec:
+  replicas: 2
+  revisionHistoryLimit: 5          # `kubectl rollout undo`-ku evlo old ReplicaSets vechikanum
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1                  # update-la 1 extra pod create pannalaam
+      maxUnavailable: 0            # ready pods count kuraiyave koodadhu → zero downtime
+  selector:
+    matchLabels:
+      app: django-backend          # indha label irukka pods-a indha Deployment manage pannum
+  template:
+    metadata:
+      labels:
+        app: django-backend
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001           # Dockerfile-la create panna appuser UID
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: django
+          image: taskapp/django-backend:1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: django-config
+            - secretRef:
+                name: django-secret
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+          # Requests = scheduler guarantee panna vendiyadhu; limits = max allowed.
+          # Memory limit thaandina OOMKilled; CPU limit thaandina throttle mattum.
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          # Pod terminate aagumbodhu endpoints removal kube-proxy/ingress-ku reach aaga
+          # konjam time aagum. Adhukkulla SIGTERM vandha in-flight requests 502 aagum —
+          # 5s wait panni apram shutdown start.
+          lifecycle:
+            preStop:
+              sleep:
+                seconds: 5
+          startupProbe:            # slow start apps-ku — idhu pass aagura varaikum liveness wait pannum
+            httpGet:
+              path: /api/health
+              port: http
+            periodSeconds: 2
+            failureThreshold: 30
+          livenessProbe:           # fail aana → container RESTART
+            httpGet:
+              path: /api/health
+              port: http
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:          # fail aana → Service endpoints-la irundhu REMOVE (restart illa)
+            httpGet:
+              path: /api/ready
+              port: http
+            periodSeconds: 5
+            failureThreshold: 2
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp              # gunicorn worker heartbeat files /tmp-la ezhudhum
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}

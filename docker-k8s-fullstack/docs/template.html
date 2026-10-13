@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Docker + Kubernetes — Django & .NET Full Stack (Tanglish)</title>
+<style>
+  :root {
+    --ink: #1c2430;
+    --muted: #5b6573;
+    --accent: #1f5fbf;
+    --accent-soft: #e8f0fc;
+    --rule: #dde3ea;
+    --code-bg: #f6f8fa;
+    --tip: #1a7f4b;
+    --tip-soft: #e8f6ee;
+    --warn: #b45309;
+    --warn-soft: #fdf3e4;
+    --danger: #b42318;
+    --danger-soft: #fdecea;
+    --interview: #6b3fb5;
+    --interview-soft: #f1ebfb;
+  }
+
+  @page {
+    size: A4;
+    margin: 17mm 15mm 18mm 15mm;
+    @bottom-right {
+      content: counter(page);
+      font: 8.5pt "Ubuntu", "Noto Sans", sans-serif;
+      color: #8a94a3;
+    }
+    @bottom-left {
+      content: "Docker + Kubernetes · Tanglish Deep Dive";
+      font: 8.5pt "Ubuntu", "Noto Sans", sans-serif;
+      color: #8a94a3;
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  body {
+    margin: 0;
+    font-family: "Ubuntu", "Noto Sans", "DejaVu Sans", sans-serif;
+    font-size: 10.2pt;
+    line-height: 1.55;
+    color: var(--ink);
+    background: #fff;
+  }
+
+  /* ---------- Cover ---------- */
+  .cover {
+    height: 260mm;
+    border-radius: 6mm;
+    padding: 30mm 20mm 22mm;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(160deg, #0f2a4f 0%, #1f5fbf 62%, #2f86d6 100%);
+    color: #fff;
+    break-after: page;
+  }
+  .cover .kicker { font-size: 11pt; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.8; }
+  .cover h1 { break-before: auto; font-size: 40pt; line-height: 1.08; margin: 14mm 0 6mm; font-weight: 700; border: 0; padding: 0; color: #fff; }
+  .cover .subtitle { font-size: 16pt; opacity: 0.95; margin: 0 0 4mm; }
+  .cover .tagline { font-size: 12pt; opacity: 0.85; margin: 0; }
+  .cover .stack { margin-top: 16mm; display: flex; flex-wrap: wrap; gap: 3mm; }
+  .cover .stack span {
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    border-radius: 999px;
+    padding: 1.6mm 4.5mm;
+    font-size: 10pt;
+  }
+  .cover .bottom { margin-top: auto; font-size: 10.5pt; opacity: 0.9; }
+  .cover .bottom strong { color: #fff; font-size: 13pt; display: block; margin-bottom: 1mm; }
+
+  /* ---------- TOC ---------- */
+  .toc { break-after: page; }
+  .toc h1.toc-title { margin-top: 0; }
+  .toc ol { list-style: none; padding: 0; margin: 0; columns: 2; column-gap: 9mm; }
+  .toc li { break-inside: avoid; font-size: 9.6pt; padding: 0.7mm 0; }
+  .toc li a { color: var(--ink); text-decoration: none; }
+  .toc li.toc-part { margin-top: 3.5mm; font-weight: 700; color: var(--accent); font-size: 9.4pt; letter-spacing: 0.04em; }
+  .toc li.toc-part a { color: var(--accent); }
+  .toc li.toc-part:first-child { margin-top: 0; }
+
+  /* ---------- Headings ---------- */
+  h1, h2, h3, h4 { line-height: 1.25; color: #0f2a4f; break-after: avoid; }
+  h1 {
+    font-size: 21pt;
+    margin: 0 0 5mm;
+    padding-bottom: 2.5mm;
+    border-bottom: 2.5px solid var(--accent);
+    break-before: page;
+  }
+  h1.part {
+    font-size: 30pt;
+    border: 0;
+    margin-top: 70mm;
+    color: var(--accent);
+  }
+  h1.part + p { font-size: 12pt; color: var(--muted); max-width: 150mm; }
+  h2 { font-size: 14.5pt; margin: 7mm 0 2.5mm; }
+  h3 { font-size: 11.6pt; margin: 5mm 0 2mm; color: #1f3d66; }
+  h4 { font-size: 10.6pt; margin: 4mm 0 1.5mm; }
+
+  p { margin: 0 0 2.6mm; orphans: 3; widows: 3; }
+  ul, ol { margin: 0 0 3mm; padding-left: 6mm; }
+  li { margin: 0.6mm 0; }
+  a { color: var(--accent); }
+  strong { color: #10203a; }
+  hr { border: 0; border-top: 1px solid var(--rule); margin: 5mm 0; }
+
+  /* ---------- Code ---------- */
+  code {
+    font-family: "Ubuntu Mono", "DejaVu Sans Mono", monospace;
+    font-size: 0.95em;
+    background: var(--code-bg);
+    border: 1px solid #e6eaef;
+    border-radius: 3px;
+    padding: 0 1mm;
+  }
+  .highlight, pre {
+    background: var(--code-bg) !important;
+    border: 1px solid #e3e8ee;
+    border-left: 3px solid #9db8e0;
+    border-radius: 4px;
+    margin: 0 0 3.5mm;
+  }
+  .highlight pre, pre {
+    font-family: "DejaVu Sans Mono", monospace;
+    font-size: 7.9pt;
+    line-height: 1.42;
+    padding: 2.6mm 3.2mm;
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    border: 0;
+  }
+  .highlight pre code, pre code { background: none; border: 0; padding: 0; font-size: inherit; }
+  p.filename {
+    font-family: "Ubuntu Mono", "DejaVu Sans Mono", monospace;
+    font-size: 8.6pt;
+    color: var(--muted);
+    margin: 3mm 0 1mm;
+    break-after: avoid;
+  }
+
+  /* ---------- Tables ---------- */
+  table { width: 100%; border-collapse: collapse; margin: 1mm 0 4mm; font-size: 9.2pt; break-inside: auto; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; }
+  th { background: var(--accent-soft); color: #0f2a4f; text-align: left; font-weight: 700; }
+  th, td { border: 1px solid var(--rule); padding: 1.6mm 2.2mm; vertical-align: top; }
+  tbody tr:nth-child(even) td { background: #fafbfd; }
+
+  /* ---------- Callouts (admonition) ---------- */
+  .admonition {
+    border-radius: 5px;
+    padding: 2.6mm 3.6mm 1mm;
+    margin: 0 0 4mm;
+    border: 1px solid var(--rule);
+    border-left-width: 4px;
+    background: #f7f9fc;
+    break-inside: avoid;
+  }
+  .admonition-title { font-weight: 700; margin-bottom: 1.2mm; }
+  .admonition.tip { border-left-color: var(--tip); background: var(--tip-soft); }
+  .admonition.tip .admonition-title { color: var(--tip); }
+  .admonition.warning { border-left-color: var(--warn); background: var(--warn-soft); }
+  .admonition.warning .admonition-title { color: var(--warn); }
+  .admonition.danger { border-left-color: var(--danger); background: var(--danger-soft); }
+  .admonition.danger .admonition-title { color: var(--danger); }
+  .admonition.note { border-left-color: var(--accent); background: var(--accent-soft); }
+  .admonition.note .admonition-title { color: var(--accent); }
+  .admonition.interview { border-left-color: var(--interview); background: var(--interview-soft); }
+  .admonition.interview .admonition-title { color: var(--interview); }
+  .admonition.lab { border-left-color: #0e7490; background: #e6f6f9; }
+  .admonition.lab .admonition-title { color: #0e7490; }
+  .admonition .highlight { background: #fff !important; }
+
+  /* ---------- Images ---------- */
+  figure, .screenshot { margin: 2mm 0 4mm; text-align: center; break-inside: avoid; }
+  img { max-width: 100%; border: 1px solid var(--rule); border-radius: 6px; }
+  .caption { font-size: 8.8pt; color: var(--muted); text-align: center; margin-top: -2mm; }
+
+  .level { display: inline-block; font-size: 8pt; font-weight: 700; letter-spacing: 0.06em; border-radius: 3px; padding: 0.4mm 2mm; margin-bottom: 2mm; text-transform: uppercase; }
+  .level.beginner { background: var(--tip-soft); color: var(--tip); }
+  .level.intermediate { background: var(--warn-soft); color: var(--warn); }
+  .level.advanced { background: var(--danger-soft); color: var(--danger); }
+
+  {{pygments_css}}
+</style>
+</head>
+<body>
+
+<section class="cover">
+  <div class="kicker">Tanglish Deep Dive · Hands-On</div>
+  <h1>Docker +<br>Kubernetes</h1>
+  <p class="subtitle">Django &amp; .NET Full Stack — Beginner → Advanced</p>
+  <p class="tagline">Container-na enna nu start panni, production-grade cluster varaikum — oru real project-oda.</p>
+  <div class="stack">
+    <span>Docker</span><span>Docker Compose</span><span>Kubernetes</span><span>Django 5.2</span>
+    <span>.NET 10</span><span>PostgreSQL 17</span><span>nginx</span><span>minikube</span><span>Kustomize</span>
+  </div>
+  <div class="bottom">
+    <strong>Vibudesh G V</strong>
+    Theory · Internals · Hands-on Labs · Debugging · Interview Q&amp;A
+  </div>
+</section>
+
+{{toc}}
+
+{{body}}
+
+</body>
+</html>

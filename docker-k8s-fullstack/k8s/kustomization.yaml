@@ -1,0 +1,27 @@
+# Ellathaiyum orey command-la apply panna:  kubectl apply -k k8s/
+# Step-by-step kathukka:                    kubectl apply -f k8s/postgres/  (etc.)
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: taskapp
+
+resources:
+  - 00-namespace.yaml
+  - postgres/secret.yaml
+  - postgres/init-configmap.yaml
+  - postgres/service.yaml
+  - postgres/statefulset.yaml
+  - django/configmap.yaml
+  - django/secret.yaml
+  - django/migrate-job.yaml
+  - django/deployment.yaml
+  - django/service.yaml
+  - django/hpa.yaml
+  - dotnet/db-init-job.yaml
+  - dotnet/deployment.yaml
+  - dotnet/service.yaml
+  - frontend/frontend-django.yaml
+  - frontend/frontend-dotnet.yaml
+  - ingress.yaml

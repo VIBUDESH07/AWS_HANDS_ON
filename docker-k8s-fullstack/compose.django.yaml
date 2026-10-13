@@ -1,0 +1,64 @@
+# Run: docker compose -f compose.django.yaml up --build
+# Open: http://localhost:3000
+name: django-stack
+
+x-django-backend: &django-backend
+  build: ./django-backend
+  image: taskapp/django-backend:1.0
+  environment:
+    DB_HOST: db            # service name = DNS name (compose network-la)
+    DB_NAME: tasks
+    DB_USER: tasks
+    DB_PASSWORD: tasks-password
+    SECRET_KEY: compose-dev-secret
+    DEBUG: "0"
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: tasks
+      POSTGRES_USER: tasks
+      POSTGRES_PASSWORD: tasks-password
+    volumes:
+      - django-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tasks -d tasks"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # One-shot container: migrate panni exit aagum (K8s Job maadhiri)
+  migrate:
+    <<: *django-backend
+    command: ["python", "manage.py", "migrate", "--noinput"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  backend:
+    <<: *django-backend
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/ready')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    image: taskapp/frontend:1.0
+    environment:
+      BACKEND_URL: http://backend:8000
+    ports:
+      - "3000:80"          # host:container
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  django-db-data:

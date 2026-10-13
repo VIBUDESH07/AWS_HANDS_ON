@@ -1,0 +1,10 @@
+# Postgres image /docker-entrypoint-initdb.d-la irukka .sql files-a FIRST TIME
+# mattum (data folder empty-a irukkumbodhu) run pannum. .NET-ku thani DB create pannrom.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+  namespace: taskapp
+data:
+  01-create-dotnet-db.sql: |
+    CREATE DATABASE dotnetdb;

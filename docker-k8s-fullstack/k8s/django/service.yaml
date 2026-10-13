@@ -1,0 +1,15 @@
+# ClusterIP Service = stable virtual IP + DNS name "django-backend".
+# Pods vandhu poanaalum (IP maarinaalum) indha name maaradhu.
+apiVersion: v1
+kind: Service
+metadata:
+  name: django-backend
+  namespace: taskapp
+spec:
+  type: ClusterIP
+  selector:
+    app: django-backend
+  ports:
+    - name: http
+      port: 8000            # Service port (client idha call pannum)
+      targetPort: http      # container port name → 8000

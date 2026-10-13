@@ -1,0 +1,24 @@
+# HorizontalPodAutoscaler — CPU average 70% (of requests) thaandina pods add pannum.
+# metrics-server venum: `minikube addons enable metrics-server`
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: django-backend
+  namespace: taskapp
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: django-backend
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 120   # load kuranjaalum 2 min wait — flapping thadukka

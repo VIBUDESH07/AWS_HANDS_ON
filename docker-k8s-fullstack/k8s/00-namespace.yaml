@@ -1,0 +1,7 @@
+# Namespace = cluster-kulla oru separate "folder". Ellam resources-um taskapp-la irukkum.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: taskapp
+  labels:
+    app.kubernetes.io/part-of: taskapp

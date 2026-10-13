@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Task Board</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="card">
+    <header>
+      <h1>Task Board</h1>
+      <p class="meta">
+        Backend: <strong id="backend-name">…</strong>
+        · Pod/Container: <code id="backend-host">…</code>
+      </p>
+    </header>
+
+    <form id="task-form">
+      <input id="task-title" name="title" placeholder="Enna panna poreenga?" maxlength="200" required autocomplete="off">
+      <button type="submit">Add</button>
+    </form>
+
+    <p id="error" class="error" hidden></p>
+    <ul id="task-list"></ul>
+    <p id="empty" class="empty" hidden>Innum task onnum illa 🎉</p>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

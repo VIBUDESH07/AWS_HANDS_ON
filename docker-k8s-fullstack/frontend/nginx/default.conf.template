@@ -1,0 +1,31 @@
+# nginx official image start aagumbodhu /etc/nginx/templates/*.template-la irukka
+# ${VAR}-a environment value-aala replace panni /etc/nginx/conf.d-la podum.
+# Adhanala ore image-a Django-kum .NET-kum BACKEND_URL maathi use pannalaam.
+server {
+    listen 80;
+    server_name _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Probes-ku — backend-a depend pannama nginx uyiroda irukka nu mattum
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    # Browser same origin-ku /api call pannum → nginx backend-ku forward pannum.
+    # Idhanala CORS problem-e illa.
+    location /api/ {
+        proxy_pass ${BACKEND_URL};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
